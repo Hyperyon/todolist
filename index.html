@@ -1,26 +1,111 @@
-<!DOCTYPE html>
-
-<html>
-<meta charset="utf-8">
-
+<!doctype html>
+<html lang="en">
 <head>
+<meta charset="utf-8">
+<title>Todo + drag and drop</title>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+<script src="jquery.js"></script>
+<script src="jquery-ui.min.js"></script>
 <script src="jstorage.js"></script>
-	<script>
-	//$.jStorage.set(key, value, options)
-	//console.log($.jStorage.index()); retourne un array
-	//$.jStorage.flush()
-	//$.jStorage.getTTL("mykey");
-	//$.jStorage.deleteKey(key)
-	//console.log($.jStorage.storageSize()); taille des données en mémoire
-	//console.log($.jStorage.storageAvailable());
+<link rel="stylesheet" href="/resources/demos/style.css">
+
+
+<style>
+
+.draggable{
+  border: solid 2px gray;
+}
+
+.conteneur{
+min-height:50px;
+min-width: 350px;
+
+
+}
+
+.blocConteneur{
+display:inline-block;
+border:1px solid;
+border-radius:20px;
+padding:20px 10px 10px 10px;
+width: 360px;
+background-color:#F2F2F2;
+}
+
+	input[type='text']{ 
+		border:none;
+		height:30px;
+		margin:1px -150px 1px 0px;
+		padding-left:10px;
+	}
+	
+	input[type='text']:focus{
+		background:#F0F0F0;
+		border:1px inset;
+		margin:0px -149px 0px -1px;
+	}
+	
+		
+	.done{
+		background:#E3E3E3;
+		text-decoration:line-through;
+		color:#C2C2C2;
+	}
+	
+	.important{
+		background:#FFEDC9;
+	}
+	
+	.urgent{
+		background:#FCA9A9;
+	}
+	
+	.facultatif{
+		background:#D8F3DE;
+	}
+	
+	.option{
+		visibility:hidden;
+	}
+	
+input[type="button"]{
+  height:14px;
+  line-height:1px;
+  font-size:10px;
+  padding: 0px;
+  } 
+  
+  p{
+	margin:0px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc0">Mes tâches<hr><div id="board" class="conteneur" ></div></div>
+<input type="button" onClick="newItem(0, '', true, '');" value="New task" />
+<input type="button" onClick="console.log(data);" value="dev" />
+
+<br><br><br>
+
+
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc1">Super task<hr><div class="conteneur" id="box1"></div></div>
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc2">aa<hr><div class="conteneur" id="box2"></div></div>
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc3">aa<hr><div class="conteneur" id="box3"></div></div>
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc4">aa<hr><div class="conteneur" id="box4"></div></div>
+</body>
+
+<script>
+
 	var data = [];
-	var idForOption = 0;
+	var flag = 0;
 	
 function charger(){
 	data = $.jStorage.get("data");
 	if(!data){ //si données inexistantes
 		data = [[0, "todo", "ma tache 1", "important"],
-				[1, "todo", "ma tache 2", "normal"],
+				[1, "todo", "ma tache 2", "facultatif"],
 				[2, "todo", "ma tache 3", "urgent"],]
 		//data[x][0] : id | data[x][1] : type | data[x][2] : title | data[x][3] : tag(s)
 		$.jStorage.set("data",data);
@@ -30,44 +115,40 @@ function charger(){
 
 function genererStructure(){
 	for(i=0; i<data.length; i++){
-		if(data[i][1] == "todo"){
-			newItem(data[i][0], "todo", data[i][2], false);
-		}
+			newItem(data[i][0], data[i][2], false, '');
 	}
 }
 
-function newItem(id, type, content, addNewTask){
+function newItem(id, content, addNewTask, type){
 	check = "";
-	if(addNewTask && type=='todo')
+	if(addNewTask){
 		id = data.length; //id actuel du nouveau item
+		priority = '';
+	}else
+		priority = data[id][3];
 		
-	document.getElementById("board").innerHTML += '<input id="'+id+'" type="checkbox" name="done" value="1" onchange="isDone(this)" '+check+' /><input size="100" id="task'+id+'" type="text" value="'+content+'" onBlur="editTask(this); this.style=\'background:#F0F0F0;\'" onClick="this.style=\'background:white;\'" onmouseover="afficherOption(this)"  /><input type="button" id="f'+id+'" class="option" value="facultatif" /><input type="button" class="option" value="important" id="i'+id+'" /><input type="button" class="option" value="urgent" id="u'+id+'" />';
-
-	if(addNewTask && type=='todo')
+	document.getElementById("board").innerHTML += '<p class="draggable" id="item'+id+'" onmouseover="afficherOption(this)" onmouseout="cacherOption(this)"><input id="'+id+'" type="checkbox" name="done" value="1" onchange="isDone(this)" '+check+' /><input class="'+priority+'" size="50" id="task'+id+'" type="text" value="'+content+'" onBlur="editTask(this); "  /><input type="button" value="facultatif" class="option" id="f'+id+'" onclick="setPriority(this)" /><input type="button" value="important" class="option" id="i'+id+'" onclick="setPriority(this)" /><input type="button" value="urgent" class="option" id="u'+id+'" onclick="setPriority(this)" /></p>';
+	
+	if(addNewTask) // && type == 'todo'
 		document.getElementById('task'+id).focus();
 		//document.getElementById("task"+id).style="background:white;"; //à modifier input ne reprend pas la couleur
-	else
-		document.getElementById("board").innerHTML += '<br>';
 }
 
 function isDone(content){
 	if(content.checked){
 		document.getElementById('task'+content.id).setAttribute('class', 'done');
-		data[parseInt(content.id)][0] = 'done';
+		data[parseInt(content.id)][1] = 'done';
 	}
 	else{
 		document.getElementById('task'+content.id).removeAttribute('class');
-		data[parseInt(content.id)][0] = 'todo';
+		data[parseInt(content.id)][1] = 'todo';
 	}
 	//console.log(data[parseInt(content.id)][0]);
 }
 
 function editTask(content){
 	var id = parseInt(content.id.slice(4), 10);
-	//console.log(id+':'+data.length+'value :'+content.value);
 	if (id != data.length && content.value != ''){
-		/*if(content.value == data[id][2])
-			console.log("ok");*/
 		content.setAttribute('value', content.value);
 		data[id][2] = content.value;
 		console.log(content.value);
@@ -76,89 +157,80 @@ function editTask(content){
 	else if(id == data.length && content.value.length >= 1){ //si nouvel item alors ajout dans le tableau
 		data.push([id, 'todo', content.value, 'normal']);
 		content.setAttribute('value', content.value);
-		document.getElementById('board').innerHTML += '<br>';
 	}
 	
 	else{ // si nouveau item ne contient alors, on supprime les inputs associés
-		element = document.getElementById(id);
+		element = document.getElementById('item'+id);
 		element.parentNode.removeChild(element);
-		element = document.getElementById(content.id);
-		element.parentNode.removeChild(element);
-	}
 
+	}
 }
 
 function afficherOption(content){ //onclick ou focus (plutot onfocus) //permet d'afficher les boutons d'options
 	//content.setAttribute('class', 'oo');
-	var id = idForOption =content.id.slice(4);
+	var id = parseInt(content.id.slice(4),10);
+	if(id< data.length && data[id][1] != 'done'){
+		document.getElementById('f'+id).setAttribute('class', 'oo');
+		document.getElementById('i'+id).setAttribute('class', 'oo');
+		document.getElementById('u'+id).setAttribute('class', 'oo');
+	}
 	
-	document.getElementById('f'+id).setAttribute('class', 'oo');
-	document.getElementById('i'+id).setAttribute('class', 'oo');
-	document.getElementById('u'+id).setAttribute('class', 'oo');
-	console.log(id);
-	window.setTimeout("cacherOption(idForOption)", 3000);
+	//console.log(id);
+	//window.setTimeout("cacherOption(idForOption)", 3000);
 }
 
-function cacherOption(idz){
-	//var id = content.id.slice(4);
-	document.getElementById('f'+idz).setAttribute('class', 'option');
-	document.getElementById('i'+idz).setAttribute('class', 'option');
-	document.getElementById('u'+idz).setAttribute('class', 'option');
+function cacherOption(content){
+	var id = content.id.slice(4);
+	//if(flag){
+	document.getElementById('f'+id).setAttribute('class', 'option');
+	document.getElementById('i'+id).setAttribute('class', 'option');
+	document.getElementById('u'+id).setAttribute('class', 'option');
+	//flag = 0;
+	//}else
+		//flag++;
+}
+
+function setPriority(content){
+	//h = content.createAttribute('class').nodeValue = 'essai';
+	var id = parseInt(content.id.slice(1), 10);
+	var value = content.value;
+	console.log(value);
+	//content.setAttribute('class', 'important');
+	
+	if(value != data[id][3]){
+		document.getElementById('task'+id).setAttribute('class', value);
+		data[id][3] = value;
+	}
+		
+	else{
+		document.getElementById('task'+id).removeAttribute('class');
+		data[id][3] = 'normal';
+	}
+		
 }
 
 charger();
-	
-	</script>
-	
-	<style>
-	input[type='text']{ 
-		border:none;
-		background:#F0F0F0;
-		height:30px;
-		margin:1px -150px 1px 0px;
-		padding-left:10px;
-	}
-	
-	.done{
-		background:#E3E3E3;
-		text-decoration:line-through;
-		color:#C2C2C2;
-	}
-	
-	.important{
-		background:orange;
-	}
-	
-	.urgent{
-		background:red;
-	}
-	
-	.facultatif{
-		background:green;
-	}
-	
-	.option{
-		visibility:hidden;
-	}
-	</style>
-</head>
-
-<body>
-
-<div id="board" >Mes tâches<br></div>
-<input type="button" onClick="newItem(0, 'todo', '', true);" value="New task" />
-<input type="button" onClick="console.log(data);" value="dev" />
-<input style="border-radius:20px; color:orange;" type="button" value="essai" />
-
-<div id="test"></div>
-<br>
-
-<script>
 window.onload = genererStructure();
+
+var haut = 0;
+var gauche = 0;
+
+//$("#box1, #box2, #box3, #box4, #board").sortable({connectWith: ".conteneur"});
+
+$("#box1, #box2, #box3, #box4, #board").sortable({connectWith: ".conteneur"});
+
+$( ".blocConteneur" ).draggable({
+drag: function(event,ui){
+      haut = ui.position.top;
+	  gauche = ui.position.left;
+  }});
+ 
+ //$("#box1").css({ top: '86px', left:'264px' });
+ 
+function savePos(content){
+	id = content.id;
+	console.log(haut+' et '+gauche+' '+id);
+}
+
 </script>
-
-</body>
-
-
-
 </html>
