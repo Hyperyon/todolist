@@ -1,124 +1,58 @@
-<!DOCTYPE html>
-
-<html>
-<meta charset="utf-8">
-
+<!doctype html>
+<html lang="en">
 <head>
+<meta charset="utf-8">
+<title>Todo + drag and drop</title>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+<script src="jquery.js"></script>
+<script src="jquery-ui.min.js"></script>
 <script src="jstorage.js"></script>
-	<script>
-	//$.jStorage.set(key, value, options)
-	//console.log($.jStorage.index()); retourne un array
-	//$.jStorage.flush()
-	//$.jStorage.getTTL("mykey");
-	//$.jStorage.deleteKey(key)
-	//console.log($.jStorage.storageSize()); taille des données en mémoire
-	//console.log($.jStorage.storageAvailable());
-	var data = [];
-	var idForOption = 0;
-	
-function charger(){
-	data = $.jStorage.get("data");
-	if(!data){ //si données inexistantes
-		data = [[0, "todo", "ma tache 1", "important"],
-				[1, "todo", "ma tache 2", "normal"],
-				[2, "todo", "ma tache 3", "urgent"],]
-		//data[x][0] : id | data[x][1] : type | data[x][2] : title | data[x][3] : tag(s)
-		$.jStorage.set("data",data);
-	}else //useless
-		console.log(data);
+<link rel="stylesheet" href="/resources/demos/style.css">
+
+
+<style>
+
+.draggable{
+  border-bottom: solid 1px gray;
 }
 
-function genererStructure(){
-	for(i=0; i<data.length; i++){
-		if(data[i][1] == "todo"){
-			newItem(data[i][0], "todo", data[i][2], false);
-		}
-	}
-}
+.conteneur{
+min-height:50px;
+min-width: 350px;
 
-function newItem(id, type, content, addNewTask){
-	check = "";
-	if(addNewTask && type=='todo')
-		id = data.length; //id actuel du nouveau item
-		
-	document.getElementById("board").innerHTML += '<input id="'+id+'" type="checkbox" name="done" value="1" onchange="isDone(this)" '+check+' /><input size="100" id="task'+id+'" type="text" value="'+content+'" onBlur="editTask(this); this.style=\'background:#F0F0F0;\'" onClick="this.style=\'background:white;\'" onmouseover="afficherOption(this)"  /><input type="button" id="f'+id+'" class="option" value="facultatif" /><input type="button" class="option" value="important" id="i'+id+'" /><input type="button" class="option" value="urgent" id="u'+id+'" />';
-
-	if(addNewTask && type=='todo')
-		document.getElementById('task'+id).focus();
-		//document.getElementById("task"+id).style="background:white;"; //à modifier input ne reprend pas la couleur
-	else
-		document.getElementById("board").innerHTML += '<br>';
-}
-
-function isDone(content){
-	if(content.checked){
-		document.getElementById('task'+content.id).setAttribute('class', 'done');
-		data[parseInt(content.id)][0] = 'done';
-	}
-	else{
-		document.getElementById('task'+content.id).removeAttribute('class');
-		data[parseInt(content.id)][0] = 'todo';
-	}
-	//console.log(data[parseInt(content.id)][0]);
-}
-
-function editTask(content){
-	var id = parseInt(content.id.slice(4), 10);
-	//console.log(id+':'+data.length+'value :'+content.value);
-	if (id != data.length && content.value != ''){
-		/*if(content.value == data[id][2])
-			console.log("ok");*/
-		content.setAttribute('value', content.value);
-		data[id][2] = content.value;
-		console.log(content.value);
-		
-	}
-	else if(id == data.length && content.value.length >= 1){ //si nouvel item alors ajout dans le tableau
-		data.push([id, 'todo', content.value, 'normal']);
-		content.setAttribute('value', content.value);
-		document.getElementById('board').innerHTML += '<br>';
-	}
-	
-	else{ // si nouveau item ne contient alors, on supprime les inputs associés
-		element = document.getElementById(id);
-		element.parentNode.removeChild(element);
-		element = document.getElementById(content.id);
-		element.parentNode.removeChild(element);
-	}
 
 }
 
-function afficherOption(content){ //onclick ou focus (plutot onfocus) //permet d'afficher les boutons d'options
-	//content.setAttribute('class', 'oo');
-	var id = idForOption =content.id.slice(4);
-	
-	document.getElementById('f'+id).setAttribute('class', 'oo');
-	document.getElementById('i'+id).setAttribute('class', 'oo');
-	document.getElementById('u'+id).setAttribute('class', 'oo');
-	console.log(id);
-	window.setTimeout("cacherOption(idForOption)", 3000);
+.blocConteneur{
+
+position:fixed;
+border:1px solid;
+border-radius:20px;
+padding:20px 10px 10px 10px;
+width: 360px;
+background-color:#F2F2F2;
 }
 
-function cacherOption(idz){
-	//var id = content.id.slice(4);
-	document.getElementById('f'+idz).setAttribute('class', 'option');
-	document.getElementById('i'+idz).setAttribute('class', 'option');
-	document.getElementById('u'+idz).setAttribute('class', 'option');
+.blocConteneur input[size='15']{
+	font-weight:bold;
+	font-size:1.1em;
+	background-color:#F2F2F2;
 }
 
-charger();
-	
-	</script>
-	
-	<style>
 	input[type='text']{ 
 		border:none;
-		background:#F0F0F0;
 		height:30px;
 		margin:1px -150px 1px 0px;
 		padding-left:10px;
 	}
 	
+	input[type='text']:focus{
+		background:white;
+		border:1px inset;
+		margin:0px -149px 0px -1px;
+	}
+	
+		
 	.done{
 		background:#E3E3E3;
 		text-decoration:line-through;
@@ -126,39 +60,286 @@ charger();
 	}
 	
 	.important{
-		background:orange;
+		background:#FFEDC9;
 	}
 	
 	.urgent{
-		background:red;
+		background:#FCA9A9;
 	}
 	
 	.facultatif{
-		background:green;
+		background:#D8F3DE;
 	}
 	
 	.option{
 		visibility:hidden;
 	}
-	</style>
+	
+input[type="button"]{
+  height:14px;
+  line-height:1px;
+  font-size:10px;
+  padding: 0px;
+  } 
+  
+  p{
+	margin:0px;
+  }
+  
+
+  
+</style>
 </head>
 
-<body>
+<body id="main" onUnload="save()">
+<!-- hh -->
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc0">
 
-<div id="board" >Mes tâches<br></div>
-<input type="button" onClick="newItem(0, 'todo', '', true);" value="New task" />
+<input type="text" size="15" id="titre0" value="Mes tâches" onblur="saveTitle(this)"/>
+
+<hr><div id="board" class="conteneur" ></div></div>
+<input type="button" onClick="newItem(0, '', true, '');" value="New task" />
 <input type="button" onClick="console.log(data);" value="dev" />
-<input style="border-radius:20px; color:orange;" type="button" value="essai" />
+<input type="button" onClick="resetPos();" value="reset Pos" />
+<input style="background:red" type="button" onClick="reset();" value="reset" />
 
-<div id="test"></div>
-<br>
+<br><br><br>
 
-<script>
-window.onload = genererStructure();
-</script>
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc1">
+<input type="text" size="15" id="titre1" value="Super task 1" onblur="saveTitle(this)"/><hr>
+<div class="conteneur" id="box0"></div></div>
+
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc2">
+<input type="text" size="15" id="titre2" value="Conteneur 2" onblur="saveTitle(this)" /><hr>
+<div class="conteneur" id="box1"></div></div>
+
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc3">
+<input type="text" size="15" id="titre3" value="Conteneur 3" onblur="saveTitle(this)" /><hr>
+<div class="conteneur" id="box2"></div></div>
+
+<div class="blocConteneur" onmouseup="savePos(this)" id="bloc4">
+<input type="text" size="15" id="titre4" value="Conteneur 4" onblur="saveTitle(this)" /><hr>
+<div class="conteneur" id="box3"></div></div>
 
 </body>
 
+<script>
+
+	var data = [];
+	var flag = 0;
+	var tab = [];
+	var initial_pos = [ ['bloc0', 157, 256],
+		['bloc1', 42, 1212],
+		['bloc2', 192, 1271],
+		['bloc3', 343, 1333],
+		['bloc4', 195, 751], ];
+		
+	var title = [];
+	var initial_title = ['Mes tâches', 'Conteneur 1', 'Conteneur 2', 'Conteneur 3', 'Conteneur 4'];
+	
+function charger(){
+	data = $.jStorage.get('data'); // récupère les todos
+	tab = $.jStorage.get('pos'); //récupère position bloc
+	title = $.jStorage.get('title'); // récupère titre bloc
+	if(!data){ //si données inexistantes
+		data = [[0, "todo", "ma tache 1", "important", "board"],
+				[1, "todo", "ma tache 2", "facultatif", "board"],
+				[2, "todo", "ma tache 3", "urgent", "board"],];
+		//data[x][0] : id | data[x][1] : type | data[x][2] : title | data[x][3] : tag(s)
+		$.jStorage.set("data",data);	
+	}
+	
+	if (!tab)
+		tab = initial_pos;
+		
+	if (!title)
+		title = initial_title;
+
+	//attention à modifier si ajout ou suppression de conteneur !!
+}
+
+function genererStructure(){
+	for(i=0; i<data.length; i++){
+			newItem(data[i][0], data[i][2], false, '');
+	}
+}
+
+function newItem(id, content, addNewTask, type){
+	check = "";
+	if(addNewTask){
+		id = data.length; //id actuel du nouveau item
+		priority = 'important'; //couleur jaune par défaut
+		element = 'board';
+	
+	}else{
+		if (data[id][1] != 'done')
+			priority = data[id][3];
+		else{
+			priority = 'done';
+			data[id][3] = 'normal';
+		}
+		
+		element = data[id][4];
+	}
+	console.log(element);
+	document.getElementById(element).innerHTML += '<p class="draggable" id="item'+id+'" onmouseover="afficherOption(this)" onmouseout="cacherOption(this)"><input id="'+id+'" type="checkbox" name="done" value="1" onchange="isDone(this)" '+check+' /><input class="'+priority+'" size="50" id="task'+id+'" type="text" value="'+content+'" onBlur="editTask(this); "  /><input type="button" value="facultatif" class="option" id="f'+id+'" onclick="setPriority(this)" /><input type="button" value="important" class="option" id="i'+id+'" onclick="setPriority(this)" /><input type="button" value="urgent" class="option" id="u'+id+'" onclick="setPriority(this)" /></p>';
+	
+	if(addNewTask) // && type == 'todo'
+		document.getElementById('task'+id).focus();
+		//document.getElementById("task"+id).style="background:white;"; //à modifier input ne reprend pas la couleur
+}
+
+function isDone(content){
+	if(content.checked){
+		document.getElementById('task'+content.id).setAttribute('class', 'done');
+		data[parseInt(content.id)][1] = 'done';
+	}
+	else{
+		document.getElementById('task'+content.id).removeAttribute('class');
+		data[parseInt(content.id)][1] = 'todo';
+	}
+	//console.log(data[parseInt(content.id)][0]);
+}
+
+function editTask(content){
+	var id = parseInt(content.id.slice(4), 10);
+	if (id != data.length && content.value != ''){
+		content.setAttribute('value', content.value);
+		data[id][2] = content.value;
+		console.log(content.value);
+		
+	}
+	else if(id == data.length && content.value.length >= 1){ //si nouvel item alors ajout dans le tableau
+		data.push([id, 'todo', content.value, 'important', 'board']);
+		content.setAttribute('value', content.value);
+	}
+	
+	else{ // si nouveau item ne contient alors, on supprime les inputs associés
+		element = document.getElementById('item'+id);
+		element.parentNode.removeChild(element);
+
+	}
+}
+
+function afficherOption(content){ //onclick ou focus (plutot onfocus) //permet d'afficher les boutons d'options
+	//content.setAttribute('class', 'oo');
+	var id = parseInt(content.id.slice(4),10);
+	if(id< data.length && data[id][1] != 'done'){
+		document.getElementById('f'+id).setAttribute('class', 'oo');
+		document.getElementById('i'+id).setAttribute('class', 'oo');
+		document.getElementById('u'+id).setAttribute('class', 'oo');
+	}
+	
+	//console.log(id);
+	//window.setTimeout("cacherOption(idForOption)", 3000);
+}
+
+function cacherOption(content){
+	var id = content.id.slice(4);
+	//if(flag){
+	document.getElementById('f'+id).setAttribute('class', 'option');
+	document.getElementById('i'+id).setAttribute('class', 'option');
+	document.getElementById('u'+id).setAttribute('class', 'option');
+	//flag = 0;
+	//}else
+		//flag++;
+}
+
+function setPriority(content){
+	//h = content.createAttribute('class').nodeValue = 'essai';
+	var id = parseInt(content.id.slice(1), 10);
+	var value = content.value;
+	console.log(value);
+	//content.setAttribute('class', 'important');
+	
+	if(value != data[id][3]){
+		document.getElementById('task'+id).setAttribute('class', value);
+		data[id][3] = value;
+	}
+		
+	else{
+		document.getElementById('task'+id).removeAttribute('class');
+		data[id][3] = 'normal';
+	}
+		
+}
+
+function save(){
+	$.jStorage.set('data', data);
+	$.jStorage.set('pos', tab);
+	$.jStorage.set('title', title);
+}
+
+function reset(){
+
+	document.getElementById('main').setAttribute('onUnload', '');
+	$.jStorage.flush();
+}
+
+charger();
+window.onload = genererStructure();
+
+var haut = 0;
+var gauche = 0;
+var itemPos = [];
+//$("#box0, #box1, #box2, #box3, #board").sortable({connectWith: ".conteneur"});
+
+$("#box0, #box1, #box2, #box3, #board").sortable({connectWith: ".conteneur",
+update: function () {
+			
+	for (i=0; i<4; i++){
+		temp = $("#box"+i).sortable('toArray').toString();
+		
+		if(temp != ''){
+			tableau = temp.split(',');
+			tableau = tableau[tableau.length-1];
+			data[parseInt(tableau.slice(4, 10))][4] = 'box'+i;
+		}
+	}
+	
+		temp = $("#board").sortable('toArray').toString();
+		console.log(temp);
+		if(temp != ''){		
+			tableau = temp.split(',');
+			tableau = tableau[tableau.length-1];
+			data[parseInt(tableau.slice(4, 10))][4] = 'board';
+	 }
+ }
+});
 
 
+
+$( ".blocConteneur" ).draggable({
+drag: function(event,ui){
+      haut = ui.position.top;
+	  gauche = ui.position.left;
+  }});
+ //tab[0][1]
+ 
+ for(i = 0; i < tab.length; i++){
+	// $("#bloc0").css({ top:tab[0][1], left:tab[0][2] });
+	$("#"+tab[i][0]).css({ top:tab[i][1], left:tab[i][2] });
+	document.getElementById('titre'+i).value = title[i];
+}
+ 
+function savePos(content){
+	id = content.id;
+	index = parseInt(id.slice(4),10);
+	if (gauche != '0' && haut != '0')
+		tab[index] = [id, haut, gauche];
+	console.log(tab);
+}
+
+function saveTitle(content){
+	id=parseInt(content.id.slice(5),10);
+	var titre = document.getElementById(content.id).value;
+	if(title[id] != titre)
+		title[id] = titre;
+}
+
+function resetPos(){
+	tab = initial_pos;
+}
+
+</script>
 </html>
