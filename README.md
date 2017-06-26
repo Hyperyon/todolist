@@ -1,2 +1,2 @@
 # todolist
-Just a todo list
+Just a homemade todo list
